@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>這餐吃什麼???</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: monospace;
+      background: linear-gradient(to bottom right, #d9f99d, #86efac);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 100 100'%3E%3Ctext x='10' y='40' font-size='30'%3E%F0%9F%8D%94%3C/text%3E%3Ctext x='50' y='90' font-size='30'%3E%F0%9F%8D%9F%3C/text%3E%3C/svg%3E");
+      background-repeat: repeat;
+      color: #065f46;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 1em;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    }
+    .card {
+      width: 280px;
+      height: 180px;
+      perspective: 1000px;
+      margin-bottom: 2em;
+    }
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      transition: transform 2s ease-in-out;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.25em;
+      font-weight: bold;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      background-color: #e6e1d3; /* 莫蘭迪色系：柔和米色 */
+    }
+    .card-back {
+      transform: rotateY(180deg);
+      animation: bounce 1s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) rotateY(180deg); }
+      50% { transform: translateY(-10px) rotateY(180deg); }
+    }
+    button {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #065f46;
+    }
+    button:hover {
+      background: #22c55e;
+    }
+  </style>
+</head>
+<body>
+  <h1>這餐吃什麼???</h1>
+  <div class="card" id="card">
+    <div class="card-inner">
+      <div class="card-front"></div>
+      <div class="card-back" id="result"></div>
+    </div>
+  </div>
+  <button onclick="draw()">開始抽牌 🃄</button>
+  <audio id="flipSound" src="https://cdn.pixabay.com/download/audio/2023/03/22/audio_6bbdf40fb2.mp3?filename=retro-game-notification-99385.mp3"></audio>
+
+  <script>
+    const restaurants = ["老爸決定", "老媽決定", "老哥決定", "老妹決定", "林東芳", "麥味登", "尚烹堂鐵板燒", "蚵仔嫂", "東北角", "陳媽媽飯糰", "早安美芝城", "lala廚房", "涓豆腐", "一涴川", "藏壽司", "阿美米干", "小籠包", "五角町", "美心餃子館", "三顧茅廬", "勝政", "老牌豬肝粥", "哈堡堡", "杏桃鬆餅屋", "路易莎", "摩斯", "雙華小館", "靜岡咖哩", "清牛堂", "高雄海產粥", "老湯頭牛肉麵", "漢堡王", "醉川湘", "澎湖海產粥", "享享鍋物", "檀島茶餐廳", "pizza工廠", "一碗小麻辣", "尬鍋", "老地方客家菜", "里歐", "一蘭", "tino pizza", "selfish burger", "豚勝", "四鄉五島", "亞當貴", "帝王食補", "夜市", "燒肉LIKE", "春水堂", "多那茲", "薩莉亞", "大戶屋", "好鮮屋", "德芳美", "池先生", "夏威夷漢堡", "永芯茶檔", "紅糖餅", "麥當勞", "貓下去", "小巷子牛肉麵", "姜滿堂", "一張桌", "麥町吐司工房", "杉", "珍好景觀餐廳", "潛艇堡", "鼎泰豐", "斗六門", "三年愛班", "壽司郎", "21世紀", "新百王", "天東86", "石頭火鍋", "天下奇冰", "日光吉食", "新明牛肉麵", "華泰美食街", "哈維士", "尚豪鐵板燒", "阿城鵝肉", "看火車咖啡", "胖老爹", "夜市割包", "清香雅集", "300度牛排", "新明羊肉羹", "老饕屋", "印度皇宮", "八色烤肉", "丸龜烏龍麵", "上野匠便當", "桶仔米糕", "老董牛肉麵", "半雞8兩", "大四喜", "小島燒", "匠燒鳥", "海龜便當", "路邊烤肉", "沙威瑪", "杏福滿門", "炒翻天", "熟檸檬", "橙私廚", "三商巧福", "竹涼", "八方雲集", "肯德基", "華泰拉麵", "鬍鬚張", "梁記麻辣火鍋", "金色三麥", "猿燒", "集英會", "頂呱呱", "瀠牛肉湯", "阿蘭碗粿", "光芒果子", "噴水雞肉飯", "樂檸漢堡", "攪攪", "丸龜", "晨間廚房", "小時後牛排", "初一食午", "肉多多", "一派胡鹽", "清原", "阿含泰", "川耗仔", "孫東寶", "雞蛋仔", "雞蛋糕", "長疆羊肉爐", "錢櫃", "曾氏滷味", "來來羊肉爐", "福柒鍋物", "麻油雞", "達美樂", "zoom in", "矮仔成蝦仁飯", "南都烤玉米", "阿鳳浮水魚羹", "圓仔惠", "樑記牛肉湯", "內壢麻油雞", "煎餅果子", "順德牛肉湯", "永通虱目魚", "Momo"];
+
+    let prev = null;
+    function draw() {
+      const card = document.getElementById('card');
+      const result = document.getElementById('result');
+      const audio = document.getElementById('flipSound');
+
+      let pick;
+      do {
+        pick = restaurants[Math.floor(Math.random() * restaurants.length)];
+      } while (pick === prev);
+      prev = pick;
+
+      card.classList.add('flipped');
+      result.innerText = '';
+      audio.play();
+
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+
+      setTimeout(() => {
+        result.innerText = pick;
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
